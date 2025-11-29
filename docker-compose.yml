@@ -7,6 +7,17 @@ services:
       MYSQL_DATABASE: coin_locker
     ports:
       - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "1883:1883"
+      - "9001:9001" # websocket
+    volumes:
+      - mosq_data:/mosquitto/data
+      - mosq_log:/mosquitto/log
 
   backend:
     build: ./backend
@@ -15,7 +26,16 @@ services:
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=coin_locker
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+      - MPESA_BASE_URL=https://sandbox.safaricom.co.ke
+      - MPESA_CALLBACK_URL=http://host.docker.internal:4000/api/payments/mpesa/callback
     ports:
       - "4000:4000"
     depends_on:
       - db
+      - mosquitto
+
+volumes:
+  db_data:
+  mosq_data:
+  mosq_log:
